@@ -1,5 +1,4 @@
-Diff-FSPM
-=========
+# Diff-FSPM
 
 Mining Frequent Sequential Patterns under Differential Privacy
 
