@@ -50,7 +50,8 @@ def ngram(ngrams_set, n_max, budget, sensitivity):
         # We do not process levels beyond n_max
         if node.level > n_max:
             break
-
+        # Python 短路语法
+        # True or True and not True 仅仅表示 (true) or (True and False) 而不是 (True or True) and (False)
         if tree.isRoot(node) or tree.isParentReleased(node) and node.left_level != None:
             # Computing threshold /theta
             # here tree.size = alphabet_size + 1, with the end symbol

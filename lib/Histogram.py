@@ -12,6 +12,15 @@ import heapq
 class Histogram:
 
     def __init__(self, bins = [], normalized=False, bin_num=None):
+        '''
+        @summary: Histogram Constructor
+
+        @param bins: Frequent Sequential Patterns
+        @normalized: 是否一致性约束的标记
+            - default False
+        @bin_num: ???
+
+        '''
         if bin_num != None:
             self.bins = np.zeros(bin_num)
         if len(bins) > 0:
@@ -37,6 +46,11 @@ class Histogram:
         file.close()
 
     def sort(self): 
+        '''
+        @summary: 降序排列
+        @note: reverse=True 降序
+
+        '''
         return Histogram(sorted(self.bins, reverse=True)) 
 
     def max(self):
@@ -117,9 +131,14 @@ class Histogram:
         return list(enumerate(self.bins))[:T]
 
     def normalize(self, sanitize = False):
-        #if self.normalized:
-        #    return self
+        '''
+        @summary: consistent approximations
 
+        @param sanitize: ？？？
+
+        @return: normalized Histogram
+        @rtype: Histogram
+        '''
         h = self.bins
         if sanitize:
             h = Utils.sanitize(h)

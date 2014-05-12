@@ -113,7 +113,7 @@ def GetOptSeqLength( filename, epsilon, mechanism="Exponential" ):
     dplog.info( "l_opt = %d" % (math.ceil(l_opt)) )
     dplog.info( " === Phase 1.1: GetOptSequenceLength End ===" )
 
-    return l_opt
+    return math.ceil(l_opt)
 
 
 if __name__ == '__main__':

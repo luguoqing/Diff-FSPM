@@ -111,6 +111,16 @@ def laplace(p_lambda):
 
 
 def normalize(vec):
+    '''
+    @summary: normalize vec counts
+
+    @param vec: bins 即FSP树某一层模式集合
+
+    @return: normalized vec
+    @rtype: list
+
+    @note: return vec if s<=0 怎么理解?
+    '''
     s = sum(vec)
     return  vec if s <= 0 else map((lambda x: x/float(s)), vec)
 

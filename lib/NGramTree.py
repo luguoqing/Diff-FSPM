@@ -25,7 +25,7 @@ class Node:
         @summary: Node Constructor
 
         @param start_id: Root结点为0
-        @param size: 包含&项总数
+        @param size: 项总数(包含&)
         @param parent_id: Root结点为-1
         @param histogram: 对应可能孩子结点？
         @param level: 树层数, Root为1
@@ -73,9 +73,16 @@ class Node:
         return self.released.all()
 
     def __repr__(self):
-        # x.__repr__ <=> repr(x)
-        # Return the canonical string representation of the object.
-        # eval(repr(object)) == object
+        '''
+        @summary: 与反引号操作符(``)相同, 以字符串的方式获取对象的内容/类型/数值属性等信息
+
+        @note 区别内建函数str(), 得到的字符串可读性好(被print调用)
+            - x.__repr__ <=> repr(x)
+            - eval(repr(object)) == object
+
+        @ Return: the canonical string representation of the object
+        @rtype: str
+        '''
         return self.histogram.__repr__()
 
     def __len__(self):
@@ -135,6 +142,18 @@ class NGramTree:
 
 
     def idToGram(self, parent_id):
+        '''
+        @summary: 根据某一层结点编号获得其表示的序列模式前缀
+            - Example: 设编号从Root=-1开始, 第3层第一个结点扩展编号为20,21,22,23
+                - 对应序列模式为: 2 1 1(反续, 即1->1->2)
+                - 返回结果有待处理(1) 逆序 (2) 编号0-3而真实为1-3,&
+
+        @param parent_id: 父结点编号, Root=-1
+
+        @return: sequential pattern Prefix
+        @rtype: list
+
+        '''
         gram = []
         while parent_id != -1:
             gram.append(parent_id % self.size)
@@ -144,6 +163,16 @@ class NGramTree:
 
 
     def iternodes(self):
+        '''
+        @summary: 获得所有可迭代的 n-grams
+
+        @return: (n-gram, nodes)
+            - nodes对应的序列模式: n-gram + nodes
+        @rtype: generator
+
+        @note: i += self.size 什么意思？？
+
+        '''
         i = 0
         gram = []
         while i in self.nodes:
@@ -192,7 +221,10 @@ class NGramTree:
 
     # Calling this function also expands the tree
     def getChild(self, node, id):
+        '''
 
+        @note: getRoot中 self.start_id += self.size = 4
+        '''
         if node.childrens[id] == None:
             parent_id = node.start_id + id
             histogram = self.getOriginalHistogram(parent_id)
@@ -204,6 +236,15 @@ class NGramTree:
         return self.nodes[node.childrens[id]]
 
     def getOriginalHistogram(self, parent_id):
+        '''
+        @summary: 获得NGramSet真实支持度计数
+
+        @param parent_id: node对应parent id
+        
+        @return: Histogram(bins)
+        @rtype: Histogram
+
+        '''
         parent_gram = self.idToGram(parent_id)
         bins = np.zeros(self.size)
         # Fetching real counts from NGramSet
@@ -213,10 +254,24 @@ class NGramTree:
 
         return Histogram(bins)
 
+
     def getOriginalHistogramByNode(self, node):
         return self.getOriginalHistogram(node.parent_id)
 
     def isParentReleased(self, node):
+        '''
+        @summary: 判断父节点是否已发布
+
+        @param node: 待划分结点
+
+        @return: True or False
+        @rtype: boolean
+
+        @note: ???
+            - 每个结点维护一个 released?
+            - FSP树仅标记 start_id 结点, 进而偏移找到 size 范围内的结点 released
+                - 但Root结点是 self.nodes[0].released 标记 1-grams released
+        '''
         start_id = (node.parent_id / self.size) * self.size
         return self.nodes[start_id].released[node.parent_id % self.size]
 
