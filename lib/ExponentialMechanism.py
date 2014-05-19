@@ -32,7 +32,7 @@ def ExponentialMechanism( sequences, fraction, epsilon ):
     sequences.sort()
     
     dplog.info( "sort sequences length: %d" % (len(sequences)) )
-    dplog.info( "sequences head median tail : %d\t%d\t%d" % (sequences[0], sequences[int(target)-1], sequences[-1]) )
+    dplog.info( "sequences head median tail : %d %d %d" % (sequences[0], sequences[int(target)-1], sequences[-1]) )
 
     previous = 0 
     counter = 0

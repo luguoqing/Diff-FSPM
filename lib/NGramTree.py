@@ -27,7 +27,7 @@ class Node:
         @param start_id: Root结点为0
         @param size: 项总数(包含&)
         @param parent_id: Root结点为-1
-        @param histogram: 对应可能孩子结点？
+        @param histogram: 对应可能孩子结点计数
         @param level: 树层数, Root为1
 
         '''
@@ -37,6 +37,11 @@ class Node:
         # 记录父结点 
         self.parent_id = parent_id
         self.childrens = np.array([None] * size)
+
+        # 标记扰动计数为哪一种类型, 以决定 epsilon
+        # True:  噪音计数
+        # False: 预测计数, epsilon 有节省(由于最初始由噪音计数计算得来, 满足E-DP)
+        self.noised = bitarray([True] * size)
         
         # 标记是否已发布 - children
         # bitarray 用以初始化 0/1
@@ -278,13 +283,14 @@ class NGramTree:
     def createRoot(self):
         self.getRoot()
 
-    def createNGramSet(self):
+    def createNGramSet(self, min_sup):
         # naive 
         self.ngram_set.clear()
         for (id, node) in self.nodes.iteritems():
             if node.hasReleasedItem():
                 for i in range(self.size):
-                    self.ngram_set[strToSeq(list(reversed(self.idToGram(node.parent_id))) + [i])] = node.histogram[i]
+                    if node.histogram[i] > min_sup:
+                        self.ngram_set[strToSeq(list(reversed(self.idToGram(node.parent_id))) + [i])] = int(node.histogram[i])
 
         return self.ngram_set
 

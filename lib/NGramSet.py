@@ -205,7 +205,7 @@ class NGramSet(Counter):
 
     def dump(self, filename):
         
-        dplog.info( "Creating ngram file (%s, N=%d)..." % (filename, self.N_max) )
+        dplog.debug( "Creating ngram file (%s, N=%d)..." % (filename, self.N_max) )
 
         file = open(filename, 'w')
         

@@ -1,22 +1,33 @@
 # encoding: utf-8
+
 '''
 Create on Apr 29, 2014
 
 @summary: Extend longer sequential patterns from N-Grams
 
 @author: Lu Guoqing <guoqing@nfs.iscas.ac.cn>
+
 '''
 
 from lib.Utils import *
 from lib.NGramSet import *
 from collections import Counter, defaultdict
 from lib.ProgressBar import *
+from lib.base.dp_log import dplog
 
 class Reconstruction:
 
-    def __init__(self, ngramset, l_max):
+    def __init__(self, ngramset, min_sup):
+        '''
+        @summary: Reconstruction Constructor
+
+        @param ngramset: n_max-grams
+        @param min_sup: minimum occurrence threshold
+
+        '''
         self.ngramset = ngramset
-        self.l_max = l_max
+        self.min_sup = min_sup
+
 
     def join(self, g1, g2, new_grams):
         '''
@@ -31,10 +42,10 @@ class Reconstruction:
         @rtype: list
         '''
         new_count = int(float(self.ngramset[g1] * self.ngramset[g2]) / self.ngramset[g2[:-1]])
-        # 此处 Diff-FSPM 需要修改 1 为 min_sup
-        if new_count >= 1:
+        if new_count >= self.min_sup:
             new_grams.append(g1 + g2[-1])
             self.ngramset[new_grams[-1]] = new_count 
+
 
     def create_prefix_set(self, grams):
         '''
@@ -43,6 +54,7 @@ class Reconstruction:
             - value: 最后一个项
 
         @param grams: max_grams
+        
         '''
         prefixes = defaultdict(set)
 
@@ -51,17 +63,20 @@ class Reconstruction:
 
         return prefixes
 
+
     def floor(self):
         '''
-        @summary: 対ngram序列模式计数取整
+        @summary: 対ngram序列模式计数取整, 且去掉负值
 
         @note: ngramset继承于Counter(字典)
             - del: remove all assigned key
+
         '''
         for i in self.ngramset.keys():
             self.ngramset[i] = int(self.ngramset[i])
             if self.ngramset[i] <= 0:
                 del self.ngramset[i]
+
 
     def extend(self):
         '''
@@ -75,8 +90,7 @@ class Reconstruction:
 
         self.floor()
 
-        # This loop is to select the longest grams in a single scanning of the ngramset
-        # 统计长度最长的所有grams
+        # This loop is to select all the  longest grams in a single scanning of the ngramset
         for i in self.ngramset.keys():
             if len(i) >= max_len:
                 if len(i) > max_len:
@@ -86,14 +100,13 @@ class Reconstruction:
                 max_grams.append(i)
 
         # This loop is to join only the joinable longest grams
-        # (we do it until there are no more grams that can be joined)
+        # (do it until there are no more grams that can be joined to exceed min_sup)
+        dplog.info( "Generating longer grams..." )
 
-        print "Generating longer grams..."
-
-        while len(max_grams) > 1 and len(max_grams[0]) < self.l_max:
+        while len(max_grams) > 1:
             new_grams = []
 
-            print "Num. of %d-grams: %d" % (len(max_grams[0]), len(max_grams))
+            dplog.debug( "Num. of %d-grams: %d" % (len(max_grams[0]), len(max_grams)) )
 
             # Creating hashmap to speed up computation (at the cost of memory)
             prefixes = self.create_prefix_set(max_grams)
