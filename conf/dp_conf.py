@@ -22,14 +22,16 @@ dataset_name = "msnbc"
 dataset = input_dir + dataset_name + ".dat"
 
 # differential privacy budget
-epsilon = 0.1
+epsilon = 1.0
 
 # minmum support value
-min_sup = 10
+min_sup = 10000
 
 # sequence length
-l_opt = 3
+l_opt = 20 
 
+# ngrams length
+n_max = 5
 
 #--------------------------------#
 # Log configuration 
@@ -52,16 +54,20 @@ LOG_LEVEL = "DEBUG"
 # output files directory
 output_dir = "data/output/"
 
-# truncated sequence database
-# dataset_truncate = output_dir + dataset_name + "-truncate-l_opt_%d"%(l_opt) + ".res"
-dataset_truncate = output_dir + dataset_name + "-truncate-l_opt_%d.res"
-
 # n-grams decomposed file
 dataset_ngrams = output_dir + dataset_name + "-original-%d_grams.res"
+
+# noisy file representing FSP-tree
+dataset_noisy = output_dir + dataset_name + "-noisy-l_opt_%d-epsilon_%.1f.res"
+
+# extended noisy file, also the FSPM results file
+dataset_extend = output_dir + dataset_name + "-noisy-l_opt_%d-epsilon_%.1f-extended.res"
+dataset_result = output_dir + dataset_name + "-noisy-l_opt_%d-epsilon_%.1f-extended.res"
+
 
 #--------------------------------#
 # TruncateSeqDB configuration
 #--------------------------------#
 
 # empirical ratio value
-RATIO_VALUE = 0.95
+RATIO_VALUE = 0.96

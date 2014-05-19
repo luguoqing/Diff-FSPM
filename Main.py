@@ -6,7 +6,7 @@ Created on Apr 24, 2014
 
 @summary: Diff-FSPM Algorithm
     - Usage: python Main.py
-    - Input parameters: epsilon, l_opt, dataset
+    - Input parameters: epsilon, l_opt, dataset, min_sup
 
 @author: Lu Guoqing <guoqing@nfs.iscas.ac.cn> 
 
@@ -21,35 +21,47 @@ from Reconstruction import *
 from NGramSet import *
 from GetOptLength import * 
 from base.dp_log import dplog
+import dp_conf as conf
 
-import dp_conf
 
 def init():
     '''
     @summary: Initialization
     
     '''
-    dplog.init_logger( dp_conf.LOG_FILE )
+    dplog.init_logger( conf.LOG_FILE )
 
 
 def Diff_FSPM():
     '''
+    Diff-FSPM 算法分为如下3个步骤：
+        - 原始序列数据集局部转换
+            - 获取最优序列长度 l_opt            ok
+            - 截断原始序列数据集                ok
+        - 层次遍历构建绕动闭前缀序列树
+            - min_sup 约束剪枝
+            - 闭等价关系 剪枝
+            - 预测计数值 PK. 噪音计数值
+        - 描述上是挖掘FSP树, 实际直接输出结果集
+            
     @summary: Diff-FSPM algorithm
-
     '''
-    dplog.debug("original sequence database : (%s)"%(dp_conf.dataset))
-    dplog.debug("differential privacy budget : (%s)"%(dp_conf.epsilon))
-    dplog.debug("minmum support value : (%s)"%(dp_conf.min_sup))
-    
-    dplog.info( " === Phase 1: Decomposing input sequence dataset to n-grams (%d<=n<=%d) Begin ===" % (1, dp_conf.l_opt) )
-    
-    dp_conf.l_opt = GetOptSeqLength(dp_conf.dataset, dp_conf.epsilon, mechanism="Exponential")
-    ngram_set = NGramSet( int(dp_conf.l_opt), N_max=int(dp_conf.l_opt) )
-    # ngram_set.load_dataset( dp_conf.dataset, dp_conf.dataset_truncate % (dp_conf.l_opt) )
-    ngram_set.load_dataset( dp_conf.dataset, dp_conf.dataset_ngrams % (dp_conf.l_opt) )
-    
-    dplog.info( " === Phase 1: Decomposing input sequence dataset to n-grams (%d<=n<=%d) End ===" % (1, dp_conf.l_opt) )
+    dplog.info( " === Phase 1: Decomposing input sequence dataset to n-grams (%d<=n<=%d) Begin ===" % (1, conf.l_opt) )
+    conf.l_opt = GetOptSeqLength(conf.dataset, conf.epsilon, mechanism="Exponential")
+    ngram_set = NGramSet( int(conf.l_opt), N_max=int(conf.n_max) )
+    ngram_set.load_dataset( conf.dataset, conf.dataset_ngrams % (conf.l_opt) )
+    dplog.info( " === Phase 1: Decomposing input sequence dataset to n-grams (%d<=n<=%d) End ===" % (1, conf.l_opt) )
 
+    dplog.info( " === Phase 2: Sanitizing n-grams to build noisy frequent sequential patterns Tree Begin ===" )
+    ngram_set = Sanitizer.ngram( ngram_set, conf.n_max, conf.epsilon, conf.l_opt, conf.min_sup)
+    ngram_set.dump( conf.dataset_noisy % (conf.l_opt, conf.epsilon))
+    dplog.info( " === Phase 2: Sanitizing n-grams to build noisy frequent sequential patterns Tree End ===" )
+    
+    dplog.info( " === Phase 3: Synthetic frequent sequential patterns from santized n-grams Begin ===" )
+    factory = Reconstruction( ngram_set, conf.min_sup )
+    factory.extend()
+    factory.ngramset.dump( conf.dataset_result % (conf.l_opt, conf.epsilon))
+    dplog.info( " === Phase 3: Synthetic frequent sequential patterns from santized n-grams End ===" )
 
 
 def main():
@@ -67,6 +79,10 @@ def main():
     dplog.info("+" * len(logstr))
     dplog.info("")
 
+    dplog.debug("original sequence database : (%s)"%(conf.dataset))
+    dplog.debug("differential privacy budget : (%s)"%(conf.epsilon))
+    dplog.debug("minmum support value : (%s)"%(conf.min_sup))
+    
     Diff_FSPM()
 
     logstr = "+"*8 + "     End Diff-FSPM Algorithm     " + "+"*8
@@ -76,27 +92,7 @@ def main():
     dplog.info("+" * len(logstr))
     dplog.info("")
 
-
+    
 if __name__ == "__main__":
     
     main()
-    
-    '''
-    file_id = "-noisy-n_max_" + str(n_max) + "-l_max_" + str(l_max) + "-eps_" + str(epsilon)
-
-    print "\n=== Phase 1: Decomposing input dataset to n-grams (%d <= n <= %d)\n" % (1,n_max)
-    ngram_set = NGramSet(int(l_max), n_max)
-    ngram_set.load_dataset(dataset + ".dat", dataset + "-original-" + str(n_max) + "grams.dat")
-
-    print "\n=== Phase 2: Sanitizing n-grams\n"
-    ngram_set = Sanitizer.ngram(ngram_set, n_max, budget=epsilon, sensitivity=l_max) 
-    ngram_set.dump(dataset + file_id + ".dat")
-
-    #print "\n=== Phase 3: Synthetic sequential database generation from sanitized n-grams\n"
-    factory = Reconstruction(ngram_set, l_max) 
-    factory.extend()
-    factory.ngramset.dump(dataset + file_id + "-extended.dat")
-
-    # Generating dataset
-    # factory.reconstruct(dataset + file_id + "-reconstructed.dat")
-    '''
